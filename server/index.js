@@ -7,6 +7,7 @@ const fs = require('fs');
 const booksRouter = require('./routes/books');
 const chatRouter = require('./routes/chat');
 const notesRouter = require('./routes/notes');
+const highlightsRouter = require('./routes/highlights');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -31,6 +32,7 @@ app.use('/uploads', express.static(uploadsDir));
 app.use('/api/books', booksRouter);
 app.use('/api/chat', chatRouter);
 app.use('/api/notes', notesRouter);
+app.use('/api/highlights', highlightsRouter);
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok', message: 'BookWise API running' }));
 

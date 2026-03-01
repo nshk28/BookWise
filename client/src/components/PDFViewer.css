@@ -143,3 +143,198 @@
   background: rgba(200, 129, 58, 0.45);
   color: transparent;
 }
+
+/* Highlight layer */
+.pdf-highlight-layer {
+  position: absolute;
+  top: 0; left: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+.saved-highlight {
+  pointer-events: all !important;
+  mix-blend-mode: multiply;
+}
+
+/* Toolbar right side */
+.toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+}
+
+.toolbar-icon-btn {
+  font-size: 12px !important;
+  padding: 5px 10px !important;
+  color: var(--parchment) !important;
+  border-color: rgba(255,255,255,0.15) !important;
+  gap: 4px;
+}
+.toolbar-icon-btn:hover {
+  background: rgba(255,255,255,0.1) !important;
+}
+
+/* Highlight picker */
+.highlight-picker-wrap { position: relative; }
+.highlight-picker {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: var(--ink);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: var(--radius-lg);
+  padding: 12px;
+  z-index: 200;
+  min-width: 180px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  animation: fadeIn 0.15s ease;
+}
+.picker-label {
+  font-size: 11px;
+  color: rgba(250,247,242,0.4);
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.color-swatches {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.color-swatch {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.2);
+  cursor: pointer;
+  font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.color-swatch:hover {
+  transform: scale(1.2);
+  border-color: white;
+}
+
+/* Bookmark */
+.bookmark-wrap { position: relative; }
+
+.active-bookmark {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: var(--radius);
+  padding: 3px 6px;
+}
+.bookmark-icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+.bookmark-icon-btn:hover { background: rgba(255,255,255,0.08); }
+.bookmark-emoji { font-size: 16px; }
+.bookmark-page { font-size: 11px; color: var(--amber-light); font-family: var(--font-mono); }
+
+.remove-bookmark-btn {
+  background: none;
+  border: none;
+  color: rgba(250,247,242,0.3);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0 2px;
+  line-height: 1;
+  transition: color 0.15s;
+}
+.remove-bookmark-btn:hover { color: var(--crimson); }
+
+.bookmark-picker {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: var(--ink);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: var(--radius-lg);
+  padding: 14px;
+  z-index: 200;
+  min-width: 220px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  animation: fadeIn 0.15s ease;
+}
+.bookmark-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.bookmark-choice {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: var(--radius);
+  padding: 8px 4px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s;
+}
+.bookmark-choice:hover {
+  background: var(--amber);
+  border-color: var(--amber);
+  transform: translateY(-2px);
+}
+.bm-emoji { font-size: 20px; }
+.bm-label { font-size: 9px; color: rgba(250,247,242,0.5); }
+.bookmark-choice:hover .bm-label { color: white; }
+
+/* Progress bar in footer */
+.reading-progress {
+  flex: 1;
+  height: 3px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 2px;
+  margin-left: 16px;
+  overflow: hidden;
+}
+.reading-progress-bar {
+  height: 100%;
+  background: var(--amber);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+  min-width: 3px;
+}
+.pdf-footer { display: flex; align-items: center; }
+
+/* Text layer & page container (keep from before) */
+.pdf-page-container {
+  position: relative;
+  display: inline-block;
+  line-height: 1;
+}
+.pdf-text-layer {
+  position: absolute;
+  top: 0; left: 0;
+  overflow: hidden;
+  pointer-events: auto;
+  user-select: text;
+  -webkit-user-select: text;
+  z-index: 2;
+}
+.pdf-text-layer span {
+  color: transparent;
+  position: absolute;
+  cursor: text;
+  user-select: text;
+  -webkit-user-select: text;
+}
+.pdf-text-layer span::selection {
+  background: rgba(200, 129, 58, 0.45);
+  color: transparent;
+}

@@ -11,14 +11,14 @@ import './Reader.css';
 export default function Reader() {
   const { bookId } = useParams();
   const navigate = useNavigate();
-  const { books, fetchNotes } = useBooks();
+  const { books, fetchNotes, highlights, addHighlight, deleteHighlight } = useBooks();
 
   const [book, setBook] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [selection, setSelection] = useState(null);
   const [pendingAction, setPendingAction] = useState(null);
-  const [showNotes, setShowNotes] = useState(false);
-  const [activePanel, setActivePanel] = useState('chat'); // 'chat' | 'notes'
+  const [activePanel, setActivePanel] = useState('chat');
+  const [bookmarkNotif, setBookmarkNotif] = useState(null);
 
   useEffect(() => {
     const b = books.find(b => b.id === bookId);
@@ -48,6 +48,30 @@ export default function Reader() {
     setSelection(null);
     setActivePanel('chat');
   }, [selection]);
+
+  const handleHighlight = useCallback((color) => {
+    if (!selection) return;
+    const range = window.getSelection()?.getRangeAt(0);
+    const rect = range?.getBoundingClientRect();
+    const canvasRect = document.querySelector('.pdf-canvas')?.getBoundingClientRect();
+    addHighlight({
+      bookId,
+      page: currentPage,
+      text: selection.text,
+      color,
+      x: rect ? rect.left - (canvasRect?.left || 0) : 0,
+      y: rect ? rect.top - (canvasRect?.top || 0) : 0,
+      width: rect?.width || 100,
+      height: rect?.height || 20,
+    });
+  }, [selection, bookId, currentPage, addHighlight]);
+
+  const handleBookmark = useCallback((bm) => {
+    const newBm = { ...bm, page: currentPage };
+    localStorage.setItem(`bookmark_${bookId}`, JSON.stringify(newBm));
+    setBookmarkNotif(`${bm.emoji} Page ${currentPage} bookmarked!`);
+    setTimeout(() => setBookmarkNotif(null), 2500);
+  }, [currentPage, bookId]);
 
   if (!book) {
     return (
@@ -87,6 +111,7 @@ export default function Reader() {
 
       {/* Main content */}
       <div className="reader-body">
+
         {/* PDF area */}
         <div className="reader-pdf-area" style={{ position: 'relative' }}>
           <PDFViewer
@@ -95,18 +120,37 @@ export default function Reader() {
             totalPages={book.totalPages}
             onPageChange={handlePageChange}
             onTextSelect={handleTextSelect}
+            highlights={highlights.filter(h => h.bookId === bookId)}
+            onHighlight={({ type, id, data }) => {
+              if (type === 'delete') deleteHighlight(id);
+            }}
           />
 
-          {/* Selection popup rendered inside pdf area */}
+          {/* Selection popup */}
           {selection && (
-            <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
+            <div style={{
+              position: 'absolute', top: 0, left: 0,
+              width: '100%', height: '100%',
+              pointerEvents: 'none'
+            }}>
               <div style={{ pointerEvents: 'all' }}>
                 <SelectionPopup
                   selection={selection}
                   onAction={handleSelectionAction}
                   onClose={() => setSelection(null)}
+                  currentPage={currentPage}
+                  bookId={bookId}
+                  onHighlight={handleHighlight}
+                  onBookmark={handleBookmark}
                 />
               </div>
+            </div>
+          )}
+
+          {/* Bookmark notification toast */}
+          {bookmarkNotif && (
+            <div className="bookmark-toast fade-in">
+              {bookmarkNotif}
             </div>
           )}
         </div>

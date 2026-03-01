@@ -12,8 +12,8 @@
   padding: 12px;
   box-shadow: 0 8px 32px rgba(0,0,0,0.5);
   border: 1px solid rgba(255,255,255,0.1);
-  min-width: 240px;
-  max-width: 300px;
+  min-width: 260px;
+  max-width: 320px;
 }
 
 .popup-excerpt {
@@ -48,7 +48,77 @@
   transition: all 0.15s;
   font-weight: 500;
 }
-.popup-btn:hover {
+.popup-btn:hover { background: var(--amber); border-color: var(--amber); }
+.popup-btn.active { background: var(--amber); border-color: var(--amber); }
+
+/* Submenus */
+.popup-submenu {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+.submenu-label {
+  font-size: 10px;
+  color: rgba(250,247,242,0.35);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 8px;
+}
+
+/* Highlight colors */
+.color-swatches {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.color-swatch {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.15);
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+.color-swatch:hover {
+  transform: scale(1.2);
+  border-color: white;
+}
+
+/* Bookmark grid */
+.bookmark-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.bookmark-choice {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: var(--radius);
+  padding: 7px 4px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  transition: all 0.15s;
+}
+.bookmark-choice:hover {
   background: var(--amber);
   border-color: var(--amber);
+  transform: translateY(-2px);
 }
+
+.bm-emoji { font-size: 18px; }
+.bm-label {
+  font-size: 9px;
+  color: rgba(250,247,242,0.4);
+  font-family: var(--font-body);
+}
+.bookmark-choice:hover .bm-label { color: white; }
