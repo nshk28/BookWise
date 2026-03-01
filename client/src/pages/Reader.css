@@ -1,0 +1,83 @@
+.reader {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.reader-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 16px;
+  color: var(--ink-muted);
+}
+
+.reader-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  height: 52px;
+  background: white;
+  border-bottom: 1px solid var(--parchment-mid);
+  flex-shrink: 0;
+  gap: 16px;
+}
+
+.back-btn { font-size: 13px; }
+
+.book-info-bar {
+  flex: 1;
+  text-align: center;
+  overflow: hidden;
+}
+
+.book-title-bar {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.book-author-bar {
+  font-size: 12px;
+  color: var(--ink-muted);
+  margin-left: 8px;
+}
+
+.topbar-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.topbar-tab {
+  font-size: 13px;
+  padding: 6px 14px;
+}
+.topbar-tab.active {
+  background: var(--amber);
+  color: white;
+}
+
+.reader-body {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+.reader-pdf-area {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+.reader-side-panel {
+  width: 360px;
+  min-width: 320px;
+  max-width: 420px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}

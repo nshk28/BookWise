@@ -1,0 +1,188 @@
+.library {
+  padding: 32px 40px;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.library-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 32px;
+}
+
+.library-title {
+  font-family: var(--font-display);
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.1;
+}
+
+.library-subtitle {
+  color: var(--ink-muted);
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+.upload-zone {
+  border: 2px dashed var(--parchment-mid);
+  border-radius: var(--radius-lg);
+  padding: 80px 40px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: var(--parchment-dark);
+}
+.upload-zone:hover, .upload-zone.drag-over {
+  border-color: var(--amber);
+  background: var(--amber-pale);
+}
+
+.upload-zone-icon { font-size: 64px; margin-bottom: 16px; }
+.upload-zone h3 { font-family: var(--font-display); font-size: 22px; color: var(--ink); margin-bottom: 8px; }
+.upload-zone p { color: var(--ink-muted); font-size: 14px; }
+
+.upload-zone-compact {
+  border: 1.5px dashed var(--parchment-mid);
+  border-radius: var(--radius);
+  padding: 14px 20px;
+  text-align: center;
+  cursor: pointer;
+  color: var(--ink-muted);
+  font-size: 14px;
+  margin-bottom: 28px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.upload-zone-compact:hover, .upload-zone-compact.drag-over {
+  border-color: var(--amber);
+  background: var(--amber-pale);
+  color: var(--amber);
+}
+
+.books-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+.book-card {
+  background: white;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  display: flex;
+  flex-direction: column;
+}
+.book-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+
+.book-spine {
+  height: 8px;
+  width: 100%;
+}
+
+.book-spine-title { display: none; }
+
+.book-info { padding: 20px; flex: 1; display: flex; flex-direction: column; }
+
+.book-title {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 4px;
+  line-height: 1.3;
+}
+.book-author { font-size: 13px; color: var(--ink-muted); margin-bottom: 12px; }
+
+.book-meta {
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--ink-muted);
+  margin-bottom: 10px;
+}
+
+.book-progress {
+  height: 3px;
+  background: var(--parchment-mid);
+  border-radius: 2px;
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+.book-progress-bar {
+  height: 100%;
+  background: var(--amber);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+  min-width: 2px;
+}
+
+.book-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: auto;
+}
+.btn-sm { padding: 6px 12px; font-size: 13px; }
+
+/* Modal */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(26,20,16,0.5);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+
+.modal {
+  background: var(--parchment);
+  border-radius: var(--radius-lg);
+  padding: 32px;
+  width: 100%;
+  max-width: 440px;
+  box-shadow: var(--shadow-lg);
+  animation: fadeIn 0.2s ease;
+}
+
+.modal-title {
+  font-family: var(--font-display);
+  font-size: 24px;
+  margin-bottom: 6px;
+}
+.modal-file { color: var(--ink-muted); font-size: 13px; margin-bottom: 24px; }
+
+.form-group { margin-bottom: 18px; }
+.form-group label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-muted);
+  margin-bottom: 6px;
+}
+.form-group input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid var(--parchment-mid);
+  border-radius: var(--radius);
+  font-family: var(--font-body);
+  font-size: 14px;
+  background: white;
+  color: var(--ink);
+  outline: none;
+  transition: border-color 0.15s;
+}
+.form-group input:focus { border-color: var(--amber); }
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 28px;
+}
