@@ -4,15 +4,10 @@ const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
 
-const booksRouter      = require('./routes/books');
-const chatRouter       = require('./routes/chat');
-const notesRouter      = require('./routes/notes');
-const highlightsRouter = require('./routes/highlights');
-
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Ensure upload and data directories exist
+// Ensure upload and data directories exist BEFORE loading routes
 const uploadsDir = path.join(__dirname, 'uploads');
 const dataDir = path.join(__dirname, 'data');
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
@@ -25,6 +20,12 @@ const highlightsFile = path.join(dataDir, 'highlights.json');
 if (!fs.existsSync(booksFile))      fs.writeFileSync(booksFile,      JSON.stringify([]));
 if (!fs.existsSync(notesFile))      fs.writeFileSync(notesFile,      JSON.stringify([]));
 if (!fs.existsSync(highlightsFile)) fs.writeFileSync(highlightsFile, JSON.stringify([]));
+
+// Load routes AFTER directories are created
+const booksRouter      = require('./routes/books');
+const chatRouter       = require('./routes/chat');
+const notesRouter      = require('./routes/notes');
+const highlightsRouter = require('./routes/highlights');
 
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
