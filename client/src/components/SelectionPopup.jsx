@@ -1,132 +1,107 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './SelectionPopup.css';
 
-const HIGHLIGHT_COLORS = {
-  yellow: { bg: 'rgba(255, 220, 50, 0.45)', label: '🟡' },
-  green:  { bg: 'rgba(80, 200, 100, 0.4)',  label: '🟢' },
-  pink:   { bg: 'rgba(255, 100, 150, 0.4)', label: '🩷' },
-  blue:   { bg: 'rgba(80, 160, 255, 0.4)',  label: '🔵' },
-  orange: { bg: 'rgba(255, 160, 50, 0.45)', label: '🟠' },
-};
-
-const BOOKMARKS = [
-  { id: 'ribbon',    emoji: '🎀', label: 'Ribbon' },
-  { id: 'star',      emoji: '⭐', label: 'Star' },
-  { id: 'heart',     emoji: '❤️', label: 'Heart' },
-  { id: 'fire',      emoji: '🔥', label: 'Fire' },
-  { id: 'gem',       emoji: '💎', label: 'Gem' },
-  { id: 'leaf',      emoji: '🍃', label: 'Leaf' },
-  { id: 'moon',      emoji: '🌙', label: 'Moon' },
-  { id: 'lightning', emoji: '⚡', label: 'Lightning' },
+const HIGHLIGHT_COLORS = [
+  { key:'yellow', label:'🟡 Yellow', bg:'rgba(255,220,50,0.50)'  },
+  { key:'green',  label:'🟢 Green',  bg:'rgba(80,200,100,0.45)' },
+  { key:'pink',   label:'🩷 Pink',   bg:'rgba(255,100,150,0.45)'},
+  { key:'blue',   label:'🔵 Blue',   bg:'rgba(80,160,255,0.45)' },
+  { key:'orange', label:'🟠 Orange', bg:'rgba(255,160,50,0.50)' },
 ];
 
-export default function SelectionPopup({
-  selection, onAction, onClose,
-  onHighlight, onBookmark,
-  currentPage, bookId
-}) {
-  const [subMenu, setSubMenu] = React.useState(null); // 'highlight' | 'bookmark' | null
+export default function SelectionPopup({ selection, onAction, onClose, onHighlight }) {
+  const [showColors, setShowColors] = useState(false);
 
   if (!selection) return null;
 
+  // ── THE KEY FIX ────────────────────────────────────────────────────────────
+  // Every button uses onMouseDown={noFocus} instead of letting the browser
+  // give focus to the button.  When a button receives focus the text layer
+  // loses focus → browser clears or greys the selection highlight.
+  // e.preventDefault() on mousedown stops the browser from moving focus
+  // at all, so the text layer keeps focus and the amber selection stays visible.
+  const noFocus = (e) => e.preventDefault();
+
   const actions = [
-    { key: 'explain',   icon: '💡', label: 'Explain' },
-    { key: 'discuss',   icon: '💬', label: 'Discuss' },
-    { key: 'note',      icon: '📝', label: 'Add Note' },
-    { key: 'highlight', icon: '🖊️', label: 'Highlight' },
-    { key: 'bookmark',  icon: '🔖', label: 'Bookmark' },
+    { key:'explain',   icon:'💡', label:'Explain'   },
+    { key:'discuss',   icon:'💬', label:'Discuss'   },
+    { key:'note',      icon:'📝', label:'Add Note'  },
+    { key:'summarize', icon:'📋', label:'Summarize' },
   ];
 
   const handleAction = (key) => {
-    if (key === 'highlight') {
-      setSubMenu(subMenu === 'highlight' ? null : 'highlight');
-      return;
-    }
-    if (key === 'bookmark') {
-      setSubMenu(subMenu === 'bookmark' ? null : 'bookmark');
-      return;
-    }
     onAction(key);
     onClose();
   };
 
-  const handleHighlightColor = (color) => {
-    onHighlight && onHighlight(color);
-    onClose();
-  };
-
-  const handleBookmarkPick = (bm) => {
-    onBookmark && onBookmark(bm);
+  const handleHighlight = (colorKey) => {
+    onHighlight && onHighlight(colorKey);
     onClose();
   };
 
   return (
     <>
-      <div className="popup-backdrop" onClick={onClose} />
+      {/* Backdrop — also uses onMouseDown noFocus so clicking it doesn't
+          flicker the selection before onClose fires */}
+      <div
+        className="popup-backdrop"
+        onMouseDown={noFocus}
+        onClick={onClose}
+      />
+
       <div
         className="selection-popup fade-in"
+        onMouseDown={noFocus}
         style={{
           left: Math.max(10, selection.position.x - 150),
-          top: Math.max(10, selection.position.y - 56)
+          top:  Math.max(10, selection.position.y - 56),
         }}
       >
+        {/* Selected text preview */}
         <div className="popup-excerpt">
           "{selection.text.length > 60
             ? selection.text.substring(0, 60) + '…'
             : selection.text}"
         </div>
 
-        {/* Main actions */}
+        {/* Action buttons */}
         <div className="popup-actions">
           {actions.map(a => (
             <button
               key={a.key}
-              className={`popup-btn ${subMenu === a.key ? 'active' : ''}`}
+              className="popup-btn"
+              onMouseDown={noFocus}
               onClick={() => handleAction(a.key)}
             >
               <span>{a.icon}</span>
               <span>{a.label}</span>
             </button>
           ))}
+
+          {/* Highlight button — toggles colour picker */}
+          <button
+            className={`popup-btn highlight-btn ${showColors ? 'active' : ''}`}
+            onMouseDown={noFocus}
+            onClick={() => setShowColors(s => !s)}
+          >
+            <span>🖊️</span>
+            <span>Highlight</span>
+          </button>
         </div>
 
-        {/* Highlight color submenu */}
-        {subMenu === 'highlight' && (
-          <div className="popup-submenu fade-in">
-            <p className="submenu-label">Pick a color</p>
-            <div className="color-swatches">
-              {Object.entries(HIGHLIGHT_COLORS).map(([key, val]) => (
-                <button
-                  key={key}
-                  className="color-swatch"
-                  style={{ background: val.bg }}
-                  onClick={() => handleHighlightColor(key)}
-                  title={key}
-                >
-                  {val.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Bookmark submenu */}
-        {subMenu === 'bookmark' && (
-          <div className="popup-submenu fade-in">
-            <p className="submenu-label">Choose your bookmark</p>
-            <div className="bookmark-grid">
-              {BOOKMARKS.map(bm => (
-                <button
-                  key={bm.id}
-                  className="bookmark-choice"
-                  onClick={() => handleBookmarkPick(bm)}
-                  title={bm.label}
-                >
-                  <span className="bm-emoji">{bm.emoji}</span>
-                  <span className="bm-label">{bm.label}</span>
-                </button>
-              ))}
-            </div>
+        {/* Colour picker — only shown after clicking Highlight */}
+        {showColors && (
+          <div className="color-row fade-in">
+            {HIGHLIGHT_COLORS.map(c => (
+              <button
+                key={c.key}
+                className="color-chip"
+                title={c.label}
+                onMouseDown={noFocus}
+                onClick={() => handleHighlight(c.key)}
+                style={{ background: c.bg }}
+              />
+            ))}
           </div>
         )}
       </div>

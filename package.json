@@ -7,7 +7,9 @@
     "dev:client": "npm start --prefix client",
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "start:server": "npm start --prefix server",
-    "build:client": "npm run build --prefix client"
+    "build:client": "npm run build --prefix client",
+    "build": "npm install --prefix server && npm install --prefix client && npm run build --prefix client",
+    "start": "NODE_ENV=production node server/index.js"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

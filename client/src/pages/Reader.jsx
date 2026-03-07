@@ -9,16 +9,25 @@ import NotesDrawer from '../components/NotesDrawer';
 import './Reader.css';
 
 export default function Reader() {
-  const { bookId } = useParams();
-  const navigate = useNavigate();
-  const { books, fetchNotes, highlights, addHighlight, deleteHighlight } = useBooks();
+  const { bookId }  = useParams();
+  const navigate    = useNavigate();
+  const { books, fetchNotes } = useBooks();
 
-  const [book, setBook] = useState(null);
+  const [book,        setBook]        = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [selection, setSelection] = useState(null);
+  const [selection,   setSelection]   = useState(null);
   const [pendingAction, setPendingAction] = useState(null);
   const [activePanel, setActivePanel] = useState('chat');
-  const [bookmarkNotif, setBookmarkNotif] = useState(null);
+
+  // ── Highlights state ────────────────────────────────────────────────────
+  const [highlights, setHighlights] = useState([]);
+
+  const fetchHighlights = useCallback(async () => {
+    try {
+      const { data } = await axios.get(`/api/highlights?bookId=${bookId}`);
+      setHighlights(data);
+    } catch (_) {}
+  }, [bookId]);
 
   useEffect(() => {
     const b = books.find(b => b.id === bookId);
@@ -26,16 +35,15 @@ export default function Reader() {
       setBook(b);
       setCurrentPage(b.currentPage || 1);
       fetchNotes(bookId);
+      fetchHighlights();
     }
-  }, [bookId, books, fetchNotes]);
+  }, [bookId, books, fetchNotes, fetchHighlights]);
 
   const handlePageChange = useCallback(async (page) => {
     if (!book || page < 1 || page > book.totalPages) return;
     setCurrentPage(page);
     setSelection(null);
-    try {
-      await axios.patch(`/api/books/${bookId}/page`, { page });
-    } catch (err) {}
+    try { await axios.patch(`/api/books/${bookId}/page`, { page }); } catch (_) {}
   }, [book, bookId]);
 
   const handleTextSelect = useCallback((sel) => {
@@ -49,34 +57,32 @@ export default function Reader() {
     setActivePanel('chat');
   }, [selection]);
 
-  const handleHighlight = useCallback((color) => {
+  // ── Highlight add/delete ─────────────────────────────────────────────────
+  const handleHighlightColor = useCallback(async (color) => {
     if (!selection) return;
-    const range = window.getSelection()?.getRangeAt(0);
-    const rect = range?.getBoundingClientRect();
-    const canvasRect = document.querySelector('.pdf-canvas')?.getBoundingClientRect();
-    addHighlight({
-      bookId,
-      page: currentPage,
-      text: selection.text,
-      color,
-      x: rect ? rect.left - (canvasRect?.left || 0) : 0,
-      y: rect ? rect.top - (canvasRect?.top || 0) : 0,
-      width: rect?.width || 100,
-      height: rect?.height || 20,
-    });
-  }, [selection, bookId, currentPage, addHighlight]);
+    try {
+      const { data } = await axios.post('/api/highlights', {
+        bookId,
+        page:  currentPage,
+        text:  selection.text,
+        color,
+      });
+      setHighlights(prev => [...prev, data.highlight]);
+    } catch (e) { console.error('Highlight save error', e); }
+    setSelection(null);
+  }, [selection, bookId, currentPage]);
 
-  const handleBookmark = useCallback((bm) => {
-    const newBm = { ...bm, page: currentPage };
-    localStorage.setItem(`bookmark_${bookId}`, JSON.stringify(newBm));
-    setBookmarkNotif(`${bm.emoji} Page ${currentPage} bookmarked!`);
-    setTimeout(() => setBookmarkNotif(null), 2500);
-  }, [currentPage, bookId]);
+  const handleHighlightEvent = useCallback(({ type, id }) => {
+    if (type === 'delete') {
+      axios.delete(`/api/highlights/${id}`).catch(() => {});
+      setHighlights(prev => prev.filter(h => h.id !== id));
+    }
+  }, []);
 
   if (!book) {
     return (
       <div className="reader-loading">
-        <div className="spinner" style={{ width: 32, height: 32 }} />
+        <div className="spinner" style={{width:32,height:32}}/>
         <p>Loading book...</p>
       </div>
     );
@@ -95,69 +101,47 @@ export default function Reader() {
         </div>
         <div className="topbar-actions">
           <button
-            className={`btn topbar-tab ${activePanel === 'chat' ? 'active' : 'btn-ghost'}`}
-            onClick={() => setActivePanel('chat')}
-          >
+            className={`btn topbar-tab ${activePanel==='chat'?'active':'btn-ghost'}`}
+            onClick={() => setActivePanel('chat')}>
             💬 Chat
           </button>
           <button
-            className={`btn topbar-tab ${activePanel === 'notes' ? 'active' : 'btn-ghost'}`}
-            onClick={() => setActivePanel('notes')}
-          >
+            className={`btn topbar-tab ${activePanel==='notes'?'active':'btn-ghost'}`}
+            onClick={() => setActivePanel('notes')}>
             📝 Notes
           </button>
         </div>
       </div>
 
-      {/* Main content */}
+      {/* Body */}
       <div className="reader-body">
-
-        {/* PDF area */}
-        <div className="reader-pdf-area" style={{ position: 'relative' }}>
+        <div className="reader-pdf-area" style={{position:'relative'}}>
           <PDFViewer
             bookId={bookId}
             currentPage={currentPage}
             totalPages={book.totalPages}
             onPageChange={handlePageChange}
             onTextSelect={handleTextSelect}
-            highlights={highlights.filter(h => h.bookId === bookId)}
-            onHighlight={({ type, id, data }) => {
-              if (type === 'delete') deleteHighlight(id);
-            }}
+            highlights={highlights}
+            onHighlight={handleHighlightEvent}
           />
 
-          {/* Selection popup */}
           {selection && (
-            <div style={{
-              position: 'absolute', top: 0, left: 0,
-              width: '100%', height: '100%',
-              pointerEvents: 'none'
-            }}>
-              <div style={{ pointerEvents: 'all' }}>
+            <div style={{position:'absolute',top:0,left:0,width:'100%',height:'100%',pointerEvents:'none'}}>
+              <div style={{pointerEvents:'all'}}>
                 <SelectionPopup
                   selection={selection}
                   onAction={handleSelectionAction}
                   onClose={() => setSelection(null)}
-                  currentPage={currentPage}
-                  bookId={bookId}
-                  onHighlight={handleHighlight}
-                  onBookmark={handleBookmark}
+                  onHighlight={handleHighlightColor}
                 />
               </div>
             </div>
           )}
-
-          {/* Bookmark notification toast */}
-          {bookmarkNotif && (
-            <div className="bookmark-toast fade-in">
-              {bookmarkNotif}
-            </div>
-          )}
         </div>
 
-        {/* Side panel */}
         <div className="reader-side-panel">
-          {activePanel === 'chat' && (
+          {activePanel==='chat' && (
             <ChatPanel
               book={book}
               currentPage={currentPage}
@@ -166,7 +150,7 @@ export default function Reader() {
               onNoteCreated={() => fetchNotes(bookId)}
             />
           )}
-          {activePanel === 'notes' && (
+          {activePanel==='notes' && (
             <NotesDrawer
               bookId={bookId}
               bookTitle={book.title}

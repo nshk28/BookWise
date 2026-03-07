@@ -1,56 +1,69 @@
 const express = require('express');
-const path = require('path');
 const fs = require('fs');
-const { v4: uuidv4 } = require('uuid');
+const path = require('path');
+const crypto = require('crypto');
 
 const router = express.Router();
-const dataDir = path.join(__dirname, '../data');
-const highlightsFile = path.join(dataDir, 'highlights.json');
+const FILE = path.join(__dirname, '../data/highlights.json');
 
-if (!fs.existsSync(highlightsFile)) fs.writeFileSync(highlightsFile, JSON.stringify([]));
+if (!fs.existsSync(FILE)) fs.writeFileSync(FILE, JSON.stringify([]));
 
-function readHighlights() {
-  return JSON.parse(fs.readFileSync(highlightsFile, 'utf8'));
+function read() {
+  try {
+    return JSON.parse(fs.readFileSync(FILE, 'utf8'));
+  } catch {
+    return [];
+  }
 }
-function writeHighlights(data) {
-  fs.writeFileSync(highlightsFile, JSON.stringify(data, null, 2));
+
+function write(data) {
+  fs.writeFileSync(FILE, JSON.stringify(data, null, 2));
 }
 
-// GET highlights for a book+page
 router.get('/', (req, res) => {
-  try {
-    let h = readHighlights();
-    if (req.query.bookId) h = h.filter(x => x.bookId === req.query.bookId);
-    if (req.query.page) h = h.filter(x => x.page === parseInt(req.query.page));
-    res.json(h);
-  } catch (err) { res.status(500).json({ error: err.message }); }
+  const { bookId } = req.query;
+  const all = read();
+  res.json(bookId ? all.filter(h => h.bookId === bookId) : all);
 });
 
-// POST save a highlight
 router.post('/', (req, res) => {
-  try {
-    const { bookId, page, text, color } = req.body;
-    if (!bookId || !text) return res.status(400).json({ error: 'bookId and text required' });
-    const highlight = {
-      id: uuidv4(),
-      bookId, page: page || 1,
-      text, color: color || 'yellow',
-      createdAt: new Date().toISOString()
-    };
-    const all = readHighlights();
-    all.push(highlight);
-    writeHighlights(all);
-    res.json({ success: true, highlight });
-  } catch (err) { res.status(500).json({ error: err.message }); }
+
+  const {
+    bookId,
+    page,
+    text,
+    startOffset,
+    endOffset,
+    color
+  } = req.body;
+
+  if (!bookId || !text) {
+    return res.status(400).json({ error: 'bookId and text are required' });
+  }
+
+  const highlight = {
+    id: crypto.randomUUID(),
+    bookId,
+    page: Number(page) || 1,
+    text: text || "",
+    color: color || "yellow",
+    createdAt: new Date().toISOString()
+  };
+  if (startOffset !== undefined) highlight.startOffset = Number(startOffset);
+  if (endOffset !== undefined) highlight.endOffset = Number(endOffset);
+
+  const all = read();
+  all.push(highlight);
+  write(all);
+
+  res.status(201).json({ highlight });
 });
 
-// DELETE a highlight
 router.delete('/:id', (req, res) => {
-  try {
-    const all = readHighlights();
-    writeHighlights(all.filter(h => h.id !== req.params.id));
-    res.json({ success: true });
-  } catch (err) { res.status(500).json({ error: err.message }); }
+  const all = read();
+  const next = all.filter(h => h.id !== req.params.id);
+  write(next);
+  res.json({ success: true });
 });
 
 module.exports = router;

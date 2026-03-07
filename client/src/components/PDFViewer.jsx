@@ -18,7 +18,7 @@ const HIGHLIGHT_COLORS = {
   orange: 'rgba(255, 160, 50, 0.55)',
 };
 
-function buildTextLayer(textContent, viewport, container, pageHighlights,onHighlight) {
+function buildTextLayer(textContent, viewport, container, pageHighlights, onHighlight) {
   container.innerHTML = '';
   container.style.width = `${viewport.width}px`;
   container.style.height = `${viewport.height}px`;
@@ -29,46 +29,111 @@ function buildTextLayer(textContent, viewport, container, pageHighlights,onHighl
     const fontHeight = Math.sqrt(tx[2] * tx[2] + tx[3] * tx[3]);
     const divWidth = item.width * viewport.scale;
 
-    const span = document.createElement('span');
-    span.textContent = item.str;
-    span.style.position = 'absolute';
-    span.style.left = `${tx[4]}px`;
-    span.style.top = `${tx[5] - fontHeight}px`;
-    span.style.fontSize = `${fontHeight}px`;
-    span.style.width = `${divWidth}px`;
-    span.style.fontFamily = item.fontName || 'sans-serif';
-    span.style.whiteSpace = 'pre';
-    span.style.cursor = 'text';
-    span.style.userSelect = 'text';
-    span.style.webkitUserSelect = 'text';
-    span.style.transformOrigin = '0% 0%';
+    // Common styles for all text spans
+    const baseStyles = {
+      position: 'absolute',
+      left: `${tx[4]}px`,
+      top: `${tx[5] - fontHeight}px`,
+      fontSize: `${fontHeight}px`,
+      fontFamily: item.fontName || 'sans-serif',
+      whiteSpace: 'pre',
+      transformOrigin: '0% 0%',
+      userSelect: 'text',
+      webkitUserSelect: 'text',
+      lineHeight: '1',
+    };
 
-    // Check if this span's text is part of any saved highlight
-    const matchedHighlight = pageHighlights.find(h =>
-      h.text && h.text.includes(item.str.trim()) && item.str.trim().length > 2
+    // Find a highlight whose text appears as a substring of this span's text
+    // (partial match — selected words are inside this line)
+    const itemText = item.str;
+    const trimmedItem = itemText.trim();
+    const partialMatch = pageHighlights.find(h =>
+      h.text && h.text.trim().length > 1 && itemText.includes(h.text.trim())
+    );
+    // Full match — this span's text is entirely inside a larger highlight
+    // (selection spans multiple PDF text items)
+    const fullMatch = !partialMatch && trimmedItem.length > 2 && pageHighlights.find(h =>
+      h.text && h.text.trim().includes(trimmedItem)
     );
 
-    if (matchedHighlight) {
-  span.style.color = 'transparent';
-  span.style.backgroundColor = HIGHLIGHT_COLORS[matchedHighlight.color] || HIGHLIGHT_COLORS.yellow;
-  span.style.borderRadius = '2px';
-  span.style.cursor = 'pointer';
-  span.dataset.highlightId = matchedHighlight.id;
-  span.title = 'Click to remove highlight';
+    if (partialMatch) {
+      const hlText = partialMatch.text.trim();
+      const matchIdx = itemText.indexOf(hlText);
 
-  span.addEventListener('click', (e) => {
-    e.stopPropagation();
-    if (window.confirm('Remove this highlight?')) {
-      onHighlight({ type: 'delete', id: matchedHighlight.id });
+      // Approximate per-character width from the total item width.
+      const charWidth = divWidth / Math.max(itemText.length, 1);
+
+      const parts = [];
+      if (matchIdx > 0) {
+        parts.push({ text: itemText.substring(0, matchIdx), highlight: false });
+      }
+      parts.push({ text: hlText, highlight: true });
+      const afterIdx = matchIdx + hlText.length;
+      if (afterIdx < itemText.length) {
+        parts.push({ text: itemText.substring(afterIdx), highlight: false });
+      }
+
+      let offsetX = 0;
+      parts.forEach((part) => {
+        const span = document.createElement('span');
+        span.textContent = part.text;
+        Object.assign(span.style, baseStyles);
+        span.style.left = `${tx[4] + offsetX}px`;
+        span.style.width = `${charWidth * part.text.length}px`;
+
+        if (part.highlight) {
+          span.style.color = 'transparent';
+          span.style.backgroundColor = HIGHLIGHT_COLORS[partialMatch.color] || HIGHLIGHT_COLORS.yellow;
+          span.style.borderRadius = '2px';
+          span.style.cursor = 'pointer';
+          span.dataset.highlightId = partialMatch.id;
+          span.title = 'Click to remove highlight';
+          span.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (window.confirm('Remove this highlight?')) {
+              onHighlight({ type: 'delete', id: partialMatch.id });
+            }
+          });
+        } else {
+          span.style.color = 'transparent';
+          span.style.cursor = 'text';
+        }
+
+        container.appendChild(span);
+        offsetX += charWidth * part.text.length;
+      });
+    } else if (fullMatch) {
+      // Entire span is part of a larger highlight — highlight the whole span
+      const span = document.createElement('span');
+      span.textContent = item.str;
+      Object.assign(span.style, baseStyles);
+      span.style.width = `${divWidth}px`;
+      span.style.color = 'transparent';
+      span.style.backgroundColor = HIGHLIGHT_COLORS[fullMatch.color] || HIGHLIGHT_COLORS.yellow;
+      span.style.borderRadius = '2px';
+      span.style.cursor = 'pointer';
+      span.dataset.highlightId = fullMatch.id;
+      span.title = 'Click to remove highlight';
+      span.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (window.confirm('Remove this highlight?')) {
+          onHighlight({ type: 'delete', id: fullMatch.id });
+        }
+      });
+      container.appendChild(span);
+    } else {
+      const span = document.createElement('span');
+      span.textContent = item.str;
+      Object.assign(span.style, baseStyles);
+      span.style.width = `${divWidth}px`;
+      span.style.color = 'transparent';
+      span.style.cursor = 'text';
+      container.appendChild(span);
     }
+
   });
-} else {
-  span.style.color = 'transparent';
 }
 
-    container.appendChild(span);
-  });
-}
 
 const BOOKMARKS = [
   { id: 'ribbon',    emoji: '🎀', label: 'Ribbon' },
