@@ -5,7 +5,16 @@ const fs = require('fs');
 
 console.log('Groq Service - API Key present:', !!process.env.GROQ_API_KEY);
 
-const client = new Groq({ apiKey: process.env.GROQ_API_KEY });
+let client = null;
+function getClient() {
+  if (!client) {
+    if (!process.env.GROQ_API_KEY) {
+      throw new Error('GROQ_API_KEY environment variable is not set. Please add it in Railway Variables tab.');
+    }
+    client = new Groq({ apiKey: process.env.GROQ_API_KEY });
+  }
+  return client;
+}
 
 const dataDir = path.join(__dirname, '../data');
 
@@ -64,7 +73,7 @@ Your role:
 Current mode: ${mode || 'chat'}`;
 
   try {
-    const response = await client.chat.completions.create({
+    const response = await getClient().chat.completions.create({
       model: 'llama-3.3-70b-versatile',
       max_tokens: 1024,
       messages: [
